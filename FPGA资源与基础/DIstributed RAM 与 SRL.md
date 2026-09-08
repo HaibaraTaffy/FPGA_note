@@ -9,15 +9,7 @@
 某些LUT内部的存储结构允许在运行过程中写入
 
 于是:
-            Address
-               │
-               ▼
-	        ┌────────────┐
-Data ──►    │   LUT RAM           │──► Output
-	        │                             │
-WE ────► │                              │
-CLK ───►   │                             │
-	        └────────────┘
+![[FPGA_Distributed_RAM_SRL.svg]]
 
 这个时候LUT是作为 **小容量RAM** 
 这种LUT 统称DIstributed RAM(分布式RAM)

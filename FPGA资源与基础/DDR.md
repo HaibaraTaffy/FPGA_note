@@ -34,19 +34,7 @@ DDR芯片具有数据总线 具有数据位宽 通常 8 16 64bit
 ## DDR内部组织
 ---
 具有Bank(块) Row(行) Column(列)
-DRAM
- │
- ├── Bank 0
- │    ├── Row
- │    └── Column
- │
- ├── Bank 1
- │    ├── Row
- │    └── Column
- │
- ├── Bank 2
- │
- └── ...
+![[FPGA_DDR_结构与接口.svg]]
 一个逻辑地址 会被控制器转换成 Bank+Row+Column
 
 ## DDR读写简化流程
@@ -65,16 +53,7 @@ DRAM
 ## Row Buffer
 ---
 当某一Row被Activate后 该Row的内容会进入内部的 `Row Buffer(行缓存)`
-DRAM Array
-    │
-    │ Activate Row 100
-    ▼
-┌────────────┐
-│      Row Buffer      │
-└────────────┘
-      │    │    │   │
-     ▼   ▼   ▼   ▼
-    Col Col Col Col
+> 对应示意见本节首图的“行缓冲访问”“FPGA 到 DDR 的分层”和“数据复用路径”。
 
 ROW Hit : 访问Activate Row的连续Column 效率很好
 但若是下一次访问其他的Row 就得重新打开Row
@@ -88,25 +67,7 @@ ROW Hit : 访问Activate Row的连续Column 效率很好
 
 ## DDRController + DDR PHY
 ---
-Your RTL
-   │
-   │ User Interface / AXI等
-   ▼
-┌────────────┐
-│  DDR Controller   │
-└─────┬──────┘
-          │
-          ▼
-┌───────────┐
-│     DDR PHY       │
-└─────┬─────┘
-          │
-      FPGA Pins
-          │
-          ▼
-┌─────────────┐
-│    DDR Memory     │
-└─────────────┘
+> 对应示意见本节首图的“行缓冲访问”“FPGA 到 DDR 的分层”和“数据复用路径”。
 
 Controller 注重逻辑 负责
 ```
@@ -161,16 +122,7 @@ DDR
 ---
 一个Data Reuse(数据复用)和Memory Hierarchy(存储层次)的雏形
 ```
-DDR
- │
- │ 大块 Burst
- ▼
-BRAM / On-Chip Buffer
- │
- ├────► Compute
- ├────► Compute
- ├────► Compute
- └────► Compute
+> 对应示意见本节首图的“行缓冲访问”“FPGA 到 DDR 的分层”和“数据复用路径”。
 ```
 
 利用DDR的大容量来存储大量数据 通过提前搬运到BRAM中 使得读取操作变快捷 (有点像内存 外存的感觉?)
