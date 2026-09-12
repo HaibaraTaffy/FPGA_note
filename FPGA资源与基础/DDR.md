@@ -12,7 +12,7 @@ DDR 属于 Off-Chip Memory 片外存储 相对较大 可以存储较大的数据
 - DRAM : 动态随机存储器
 	- 利用电容中的电荷状态保存bit 需要周期性Refresh
 	- 特点 : 密度高 容量大 单位容量成本低
-- SDRAM : 同步动态随机存储器 S意为同步 DRAM的操作与时钟同步
+- **SDRAM : 同步动态随机存储器 S意为同步 DRAM的操作与时钟同步**
 
 >DDR : 全称DDR SDRAM DDR指的是 Double Data Rate 一个时钟周期内 在两个时钟边沿均传输数据
 
