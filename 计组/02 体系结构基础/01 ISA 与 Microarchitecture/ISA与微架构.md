@@ -48,6 +48,7 @@ STORE 向存储器写入数据
 ---
 即 Instruction Set Architecture 指令集架构
 是 **软件和处理器硬件之间 约定的一整套规则**
+我们以 开源的 RISC-V 为例 来进行学习!!!
 
 ```
 例如 ISA 会规定：

@@ -232,3 +232,43 @@ FP64
 Multiplier
 Divider
 ```
+因为乘法比加法更加复杂 可能很多微架构中 会选择 `ALU + Multipler` 的组合
+除法就更复杂了 可能需要 `多周期迭代 或者 专用Divider`
+
+## 位宽
+---
+一般来说 ALU 的位宽与处理器的数据处理宽度密切相关
+但不一定是 *一个64bit CPU内部所有硬件都必须是64bit*
+真实微架构可能包含很多不同宽度的数据路径
+
+位宽越大 ALU就会面临更多问题
+
+## Carry Propagation
+---
+进位传播
+在二进制加法中 如果每一级都需要等前一级的 Carry 那么这条路径就会越来越长 即形成了 **进位传播**
+代表加法器 : `Ripple-Carry Adder 行波进位加法器`
+更快的加法器 :
+- Carry-Lookahead Adder CLA 超前进位加法器
+- Carry-Select Adder CSA 进位选择加法器
+- Parallel-Prefix Adder PPA 并行前缀加法器
+
+## RTL实现
+---
+一个简单ALU
+```Verilog
+always @(*) begin
+    case (alu_ctrl)
+        ADD: result = a + b;
+        SUB: result = a - b;
+        AND: result = a & b;
+        OR : result = a | b;
+        XOR: result = a ^ b;
+        default: result = 0;
+    endcase
+end
+```
+
+现实实现其实并不是各个模块并行的 而是存在中间结果的复用和共享逻辑
+例如`ADD/SUB`共用加法器等
+

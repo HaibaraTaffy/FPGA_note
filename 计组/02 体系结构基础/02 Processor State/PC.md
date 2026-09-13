@@ -1,5 +1,5 @@
 **CPU内部 专门保存 "下一步从哪里取指令" 的地址寄存器
-Program Counter**
+Program Counter** 程序计数器
 
 ## 本质
 ---
