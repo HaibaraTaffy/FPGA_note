@@ -9,6 +9,17 @@ Branch 条件分支
 Jump 跳转
 ```
 
+| 类别                   | RISC-V 示例 | 主要数据来源                                    | 主要更新目标        |
+| -------------------- | --------- | ----------------------------------------- | ------------- |
+| Arithmetic           | `add`     | Register + Register                       | Register      |
+| Arithmetic Immediate | `addi`    | Register + Immediate                      | Register      |
+| Logic                | `and`     | Register + Register                       | Register      |
+| Shift                | `sll`     | Register + Shift Amount                   | Register      |
+| Load                 | `lw`      | Base Register + Immediate + Memory        | Register      |
+| Store                | `sw`      | Base Register + Data Register + Immediate | Memory        |
+| Branch               | `beq`     | Register + Register                       | PC            |
+| Jump                 | `jal`     | PC + Immediate                            | Register + PC |
+
 ## Arithmetic Instruction
 ---
 算术指令 例如
@@ -138,3 +149,156 @@ sw x5, 8(x6)
 完整语义 : `Memory[RF[x6] + 8] <- RF[x5]`
 
 **该条指令没有 rd 因为最终写入的是 Memory**
+
+## Load/Store Architecture
+---
+载入 存储体系结构
+**特点 普通数据的 Memory Access 由 Load/Store 指令完成**
+意思是 普通数据需要先经过 Load/Store 来进入或离开 RF 与 Memory交互
+计算指令 只负责 在RF层面进行存取
+
+达到了 **Memory Access 与 Arithmetic Operation 在 ISA层面被明确分开**
+
+## Branch
+---
+条件分支 **根据条件 决定 Next PC**
+例如 **BEQ - Branch if Equal 相等则分支**
+```
+beq x5, x6, target
+```
+
+语义 : CPU比较 `RF[x5]` 和 `RF[x6]` 若相等 则
+`BranchTarget -> PC` 否则 按原来递增 `PC + 4 -> PC`
+
+用于 改变程序的 Control Flow
+`Branch Target = PC + Branch Offset`
+如果成立 则称为 `Branch Taken` 分支成立/采用分支
+
+## Jump
+---
+跳转 直接改变 Control Flow
+RISC - V 中 重要的
+```
+jal
+jalr
+```
+
+## JAL
+---
+即 Jump And Link 跳转并保存返回地址
+例如
+```
+jal x1, target
+```
+分两步 :
+1. `RF[x1] <- PC + 4` 保存返回地址
+2. `PC <- target` 跳转到目标地址
+
+这里可以看到 **一条 Instruction 可以同时更新多个处理器状态**
+
+## Instruction 对应硬件行为
+---
+现在比较几条典型指令。
+### ADD
+```
+add x5, x6, x7
+```
+需要：
+```
+Register File Read
+→ ALU ADD
+→ Register File Write
+```
+---
+### ADDI
+```
+addi x5, x6, 10
+```
+需要：
+```
+Register File Read
+→ Immediate Generator
+→ MUX
+→ ALU ADD
+→ Register File Write
+```
+---
+### LW
+```
+lw x5, 8(x6)
+```
+需要：
+```
+Register File Read
+→ Immediate Generator
+→ Address Calculation 地址计算器
+→ Memory Read 存储器读
+→ Register File Write
+```
+---
+### SW
+```
+sw x5, 8(x6)
+```
+需要：
+```
+Register File Read
+→ Immediate Generator
+→ Address Calculation
+→ Memory Write
+```
+---
+### BEQ
+```
+beq x5, x6, target
+```
+需要：
+```
+Register File Read
+→ Compare
+→ Branch Target Calculation
+→ Next-PC Selection
+```
+
+## 复用
+---
+由于 **不同 Instruction 会让同一套 Datapath 形成不同的数据流**
+所以 可以通过 `Mux + Control` 来选择不同的 Operand 来源 复用同一个ALU
+
+## 分析Instruction
+---
+分析一条 RISC-V Instruction 可以先看四个方面
+1. RF 是否读取/写入
+2. Execution Hardware 需要哪些?
+3. Memory 是否读取/写入
+4. Next PC 是递增/跳转?
+
+一般 **一条 ISA Instruction 可以对应多个内部硬件操作**
+
+分析流程:
+1. 这条Instruction做什么?
+2. 读取哪些Register
+3. 真正数据来自哪里
+4. 最终更新什么状态
+5. 需要哪些硬件
+6. Next PC是什么
+
+## Micro-Operation 微操作
+---
+指处理器内部 一次比较基础的数据传送 运算 或者 状态更新
+例如 `lw` 可以从功能上拆成：
+```
+Register Read
+Address Calculation
+Memory Read
+Register Write
+```
+
+但是注意 `Micro-Operation ≠ MicroInstruction`
+**MicroInstruction - 微指令 是某些控制器具体实现方式中的概念**
+Micro-Operation 是更一般的处理器内部操作概念
+
+## Instruction Width 和 Data Width
+---
+在RV32I中 整数 Register Width 和 基础 Instruction Width 均为 `32bit`
+但是概念不同 只是数值恰好相同
