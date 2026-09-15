@@ -196,6 +196,22 @@ jal x1, target
 
 这里可以看到 **一条 Instruction 可以同时更新多个处理器状态**
 
+## LUI
+---
+Load Upper Immediate 即加载高位立即数
+例如:
+```
+lui x5, 0x12345
+```
+
+语义 `RF[x5] = 0x1234_5000`
+
+## AUIPC
+---
+Add Upper Immediate to PC 即高位立即数与PC相加
+语义为 `RF[rd] <- CurrentPC + UpperImmediate`
+
+
 ## Instruction 对应硬件行为
 ---
 现在比较几条典型指令。
