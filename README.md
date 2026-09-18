@@ -48,7 +48,7 @@
 
 完成体系结构基础后，可以沿着仓库中新整理的 Mini Core 笔记，把概念落实到一颗真正的单周期 CPU：
 
-1. [`总体设计`](计组/10%20RISC-V/RV32I%20Mini%20Core/总体设计.md)：了解当前 CPU 的目标、模块划分和存储器模型。
+1. [`总体设计`](00%20总体设计.md)：了解当前 CPU 的目标、模块划分和存储器模型。
 2. `PC Register` → `Instruction Memory` → `Register File`：先搭建处理器状态与取指基础。
 3. `ImmGen` → `ALU`：建立立即数生成和执行单元。
 4. `Main Decoder` → `ALU Decoder`：完成控制信号译码。
