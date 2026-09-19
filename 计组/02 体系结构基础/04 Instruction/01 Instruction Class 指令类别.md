@@ -124,9 +124,9 @@ lw x5 8(x6)
 ```
 
 - `LW - Load Word 载入字` 在RV32I 中 一个Word = 32bit
-- `x6` 在这里是 **Base Register 基址寄存器** 存放Base Address 基地址
+- `x6` 在这里是 **Base Register 基址寄存器** 存放Base Address 基地址 对应`rs1`
   CPU读取 `RF[x6] 即基地址` 作为地址计算的基础
-- `8` 在这里是 **Offset 偏移量** 指相对于基地址 偏移了多少
+- `8` 在这里是 **Offset 偏移量** 指相对于基地址 偏移了多少 对应 `Immediate`
 - `EA` 即`Effective Address` 有效地址 由
   `EA = Base Address + Offset` 算出 在这里实际上是
   `EA = RF[x6] + 8`
