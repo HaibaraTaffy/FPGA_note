@@ -345,3 +345,197 @@ Register File Write Data
 
 ## SW Datapath
 ---
+以 `SW x5 12(x1)` 为例
+
+先分析语义 :
+```
+Address ← RF[x1] + 12
+Memory[Address] ← RF[x5]
+```
+
+> 完整 State
+
+```
+FETCH
+↓
+DECODE
+↓
+MEM_ADDR
+↓
+MEM_WRITE
+↓
+FETCH
+```
+
+## MEM_ADDR State
+---
+> Data 来源
+
+```
+A Register = RF[x1]
+Immediate  = 12
+```
+
+> Datapath
+
+```
+A				Immediate
+↓				↓
+ALU Operand A   ALU Operand B
+
+ALU
+↓
+A + Immediate
+```
+
+> Clock Edge 更新
+
+`ALUOut ← A + Immediate`
+此时 `ALUOut` 中保存的是 **Memory Address**
+
+## MEM_WRITE State
+---
+> Datapath
+
+```
+ALUOut			     B Register
+↓			          ↓
+Data Memory Address	Data Memory Write Data
+```
+
+> Clock Edge 更新
+
+`Data Memory[ALUOut] <- B`
+
+## Branch Datapath
+---
+以 `BEQ x1 x2 target` 为例
+
+>完整 State path
+
+```
+FETCH
+↓
+DECODE
+↓
+BRANCH
+↓
+FETCH
+```
+
+注意 在 Decode State 已经完成
+```
+A ← RF[x1]
+B ← RF[x2]
+ALUOut ← OldPC + Branch Immediate
+```
+所有需要的数据已经准备好
+
+## BRANCH State
+---
+> Datapath
+
+比较 路径 :
+```
+A		B
+↓		↓
+ALU		ALU
+
+ALU : A - B -> zero
+```
+Target 路径 :
+```
+ALUOut
+↓
+PC Input MUX
+```
+Control 路径 决定 PC 是否写入
+```
+funct3
++
+ALU Condition
+```
+注意 `FETCH 时 PC = OldPC + 4`
+
+> Clock Edge 更新
+
+```
+Branch Taken : 
+PC Write Enable = 1
+PC <- ALUOut
+Branch Not Taken : PC保持原值
+```
+
+## JAL Datapath
+---
+先分析语义
+```
+RF[rd] ← OldPC + 4
+PC ← OldPC + Immediate
+```
+
+注意到
+```
+FETCH 后 PC = OldPC + 4
+DECODE 后 ALUOut = OldPC + Immediate
+```
+正是我们所需要的 并且由于直接跳转 所以直接可以使用
+
+## JAL State
+---
+> Datapath
+
+```
+PC							ALUOut
+↓							↓
+Write-Back MUX				PC Input MUX
+↓							↓
+RF[rd]						PC
+```
+
+> Clock Edge 更新
+
+```
+RF[rd] ← PC
+PC     ← ALUOut
+```
+
+## JALR Datapath
+---
+先分析语义
+```
+RF[rd] ← OldPC + 4
+PC ← (RF[rs1] + Immediate) & ~1
+```
+注意到
+```
+在 FETCH 后
+PC = OldPC + 4
+在 DECODE 后
+Register A = RF[rs1]
+```
+已经有一部分 Data准备好
+
+## JALR State
+---
+```
+path1 			path 2
+A				PC
++				↓
+Immediate		Write-Back MUX
+↓				↓
+ALU				RF[rd]
+↓				
+清除 bit[0]				
+↓				
+PC Input				
+```
+
+> Clock Edge 更新
+
+```
+RF[rd] ← PC
+PC ← {ALU Result[31:1], 1'b0}
+```
+由于同步更新 不涉及跨时钟保存 这里的 ALU Result 可以直接写入 PC
+
