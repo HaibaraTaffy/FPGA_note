@@ -32,7 +32,7 @@ Hazard Control 采取措施
 
 ## Structural Hazard
 ---
-结构冒险 多个 **流水级** 在同一 Cycle 争用同一个硬件资源
+Structural Hazard 结构冒险 多个 **流水级** 在同一 Cycle 争用同一个硬件资源
 
 产生的本质原因是
 `同时发生的 Operation > Hardware 能提供的 Operation`
@@ -61,4 +61,38 @@ Instruction Fetch 与 Load 争用 Cache Port
 这种等待则称为
 **Stall - Pipeline Stall - 流水线停顿**
 但不是简单的停止整个CPU 需要有策略的停顿
+
+## Data Hazard
+---
+Data Hazard 数据冒险 Instruction 之间的**数据依赖** 与 流水线**执行时序**发生冲突
+
+Data Dependency 数据依赖 一条 Instruction 所需的数据由另一条 Instruction 产生
+
+但是 **Data Dependency 不一定造成 Data Hazard**
+而且 相同程序放到不同的 Pipeline中 可能出现不同的 Hazard
+
+## RAW Data Hazard
+---
+即 Read After Write 写后读相关 这是基础顺序执行 Pipeline 中最重要的
+
+含义为
+```
+前一条 Instruction 应该先写入某个位置
+后一条 Instruction 随后读取同一位置
+```
+
+注意区分
+`Result Available 结果有效` 和 `Result Committed to Register File 结果寄存`
+在基础五级 Pipeline 中
+```
+ALU Instruction 的 Result
+通常在 EX 末尾已经产生
+但在 WB Stage
+才写入 Register File
+```
+所以 有时 Data 其实已经存在于
+`EX/MEM Register` 或 `MEM/WB Register`
+只是还没有存到 `RF` 中
+**这为后续 Forwarding 提供可能**
+
 
