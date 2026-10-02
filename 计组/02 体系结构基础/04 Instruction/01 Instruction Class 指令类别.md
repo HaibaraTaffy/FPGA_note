@@ -130,6 +130,7 @@ lw x5 8(x6)
 - `EA` 即`Effective Address` 有效地址 由
   `EA = Base Address + Offset` 算出 在这里实际上是
   `EA = RF[x6] + 8`
+- `x5` 是目标寄存器 但是实际上`rd`
 
 完整语义推导 : 读取 `Memory[EA]` 把读出的数据写入`RF[x5]`
 即 `RF[x5] <- Memory[RF[x6] + 8]`
@@ -146,6 +147,7 @@ sw x5, 8(x6)
 ```
 - `SW - Store Word 存储字`
 其余可以参考`lw`
+`x6` 对应 `rs1` `x5` 对应 `rs2`
 完整语义 : `Memory[RF[x6] + 8] <- RF[x5]`
 
 **该条指令没有 rd 因为最终写入的是 Memory**
