@@ -238,5 +238,133 @@ EX/MEM.WriteData
 ↓
 Data Memory
 ```
-更新 `EX/MEM.WriteData` 否则可能读取到 `SW Decode` 阶段读取的旧值(WriteData 读取之后就传下来了 直到更新)
+更新 `EX/MEM.WriteData` 否则可能读取到 `SW Decode` 阶段读取的旧值 (WriteData 读取之后就传下来了 直到更新)
+
+## Branch Operand Forwarding
+---
+例如
+```
+ADD x3 x1 x2
+BEQ x3 x4 target
+```
+BEQ 的比较 Operand 可以使用相同的 Forwarding MUX
+```
+EX/MEM.ADD Result
+↓
+ForwardA MUX
+↓
+Branch Comparator 或 ALU
+```
+我们的设计保持 `Branch 在 EX Stage 解析`
+
+## JALR 的 Operand Forwarding
+---
+例如
+```
+ADD  x3 x1 x2
+JALR x5 0(x3)
+```
+JALR 在 `EX Stage` 计算 Target
+可以复用
+```
+EX/MEM Result
+↓
+ForwardA MUX
+↓
+JALR Target Calculation
+```
+
+## Load Result 特殊
+---
+例如
+```
+LW  x3 0(x1)
+ADD x4 x3 x5
+```
+`ADD` 位于 `EX` 时
+`LW` 位于 `MEM`
+此时 `EX/MEM` 中保存的并不是 `Memory Read Data` 而是 `Effective Address`
+会出现错误
+
+所以 对于`EX/MEM Forwarding` 还必须确认
+**Producer 的 最终 Register Result 是否已经在这个位置准备好**
+
+对于我们的 基础五级 Pipeline
+```
+R-Type Result
+EX Stage 末尾准备好
+I-Type ALU Result
+EX Stage 末尾准备好
+LW Result
+MEM Stage 末尾才准备好
+```
+于是牵扯出 `Result Availability`
+
+## Result Availability
+---
+是否能 `Forward` 需要看 `Result` 是否已经产生可用
+
+| Producer      | Result 内容   | 最早产生位置 | 紧邻 Consumer 能否直接使用   |
+| ------------- | ----------- | ------ | -------------------- |
+| ADD SUB AND 等 | ALU Result  | EX 末尾  | 通常可以 EX/MEM Forward  |
+| ADDI          | ALU Result  | EX 末尾  | 通常可以 EX/MEM Forward  |
+| LW            | Memory Data | MEM 末尾 | 通常需要 Stall           |
+| JAL           | PC + 4      | 较早已知   | 取决于 Datapath 是否提供该路径 |
+| JALR          | PC + 4      | 较早已知   | 取决于 Datapath 是否提供该路径 |
+|               |             |        |                      |
+解决 Result 尚未及时产生的问题 需要`Stall`
+
+## Load 到 Store 的特殊情况
+---
+例如
+```
+LW x3 0(x1)
+SW x3 0(x4)
+```
+时间关系
+```
+LW 在 MEM 时
+产生 Load Data
+SW 同时在 EX
+计算自己的 Store Address
+下一 Cycle
+SW 才在 MEM 使用 Store Data
+```
+如果 Datapath 提供：
+```
+MEM/WB.Load Result
+↓
+Data Memory Write Data
+```
+那么 SW 可以在自己的 MEM Stage 获得 Load Data
+避免了 Stall
+
+## Forwarding 优先级表
+---
+
+|条件|Operand 来源|
+|---|---|
+|EX/MEM 是有效 Producer 且 rd 匹配|EX/MEM Result|
+|EX/MEM 不匹配 但 MEM/WB 是有效 Producer 且 rd 匹配|MEM/WB Result|
+|都不匹配|ID/EX Register Data|
+有效 `Producer` 至少要求
+```
+valid = 1
+RegWrite = 1
+rd != x0
+Result 已准备好
+```
+
+其中 被 `Flush` 的 Instruction 通过 
+`RegWrite` 和 `Valid` 来保证 无效Instruction 不产生影响
+
+## Forwarding 对 Critical Path 的影响
+---
+Forwarding 提高性能的方式 `减少 Stall`
+但是同时会增加 Hardware 可能会增加延迟
+形成一个 `Trade-Off`
+
+## 核心原则
+---
+**Result 的逻辑归属位置 不一定是 Consumer获取它的唯一来源 只要 Data 已经产生 Microarchitecture 可以建立更直接的传递路径**
 
